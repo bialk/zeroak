@@ -1,0 +1,62 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0107 
+header_name {.h} 
+code_name {.cxx}
+class frmStereoShapeUI {open
+} {
+  decl {public:} {public
+  }
+  Function {frmStereoShapeUI()} {open
+  } {
+    Fl_Window pnl {
+      label {Stereo 3D} open
+      xywh {237 248 185 185} type Double box UP_BOX align 0 resizable visible
+    } {
+      Fl_Group {} {
+        label {Image Slots:} open
+        xywh {5 20 170 65} box PLASTIC_UP_FRAME align 5
+      } {
+        Fl_Button img_off {
+          label off
+          xywh {10 30 30 20}
+        }
+        Fl_Button img1 {
+          label 1
+          xywh {50 30 30 20}
+        }
+        Fl_Button img2 {
+          label 2
+          xywh {80 30 30 20}
+        }
+        Fl_Button img3 {
+          label 3
+          xywh {110 30 30 20}
+        }
+        Fl_Button img4 {
+          label 4
+          xywh {140 30 30 20}
+        }
+        Fl_Button img_reg {
+          label reg
+          xywh {10 55 30 20}
+        }
+      }
+      Fl_Output imagefile {
+        label {File name:}
+        xywh {5 115 150 25} align 5
+      }
+      Fl_Button imagefile_dlg {
+        label {...}
+        xywh {155 115 25 25} align 16
+      }
+      Fl_Button reg_prm_btn {
+        label Registration
+        xywh {5 150 130 25}
+      }
+      Fl_Button reg_go_btn {
+        label {@>} selected
+        xywh {150 150 32 25}
+      }
+    }
+  }
+} 

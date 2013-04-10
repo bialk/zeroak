@@ -1,0 +1,9 @@
+
+# zeroapp repository
+svn co https://free2.projectlocker.com/bialk/ZeroApp/svn/trunk/zeroapp zeroapp
+username: pubbialk@list.ru
+password: -//-
+
+
+//use to add command
+svn propedit svn:externals .
