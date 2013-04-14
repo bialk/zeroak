@@ -2,7 +2,7 @@
 #define dispview_h
 
 #include <list>
-#include <GL/gl.h>
+#include <Fl/gl.h>
 #include "editviewobj.h"
 #include "apputil/signals.h"
 #include "eventhnd.h"

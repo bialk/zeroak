@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <malloc.h>    
 extern "C" {
+#ifndef WIN32
 #include <jpeglib.h>
+#endif
 }
 #include "eventlog.h"
 
@@ -10,6 +12,7 @@ extern "C" {
 void savejpeg(const char *filename, const unsigned char *image_buf, 
 	      long image_width, long image_height){
 
+#ifndef WIN32
   /* Points to large array of R,G,B-order data */
 
   JSAMPLE *image_buffer = (JSAMPLE *)image_buf;  
@@ -49,4 +52,5 @@ void savejpeg(const char *filename, const unsigned char *image_buf,
   jpeg_write_scanlines(&cinfo, row_pointer, cinfo.image_height);
   jpeg_finish_compress(&cinfo);
   jpeg_destroy_compress(&cinfo);
+#endif
 }

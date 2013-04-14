@@ -1,6 +1,5 @@
 #include <sys/stat.h>
 #include <string>
-
 #include "dispview.h"
 #include "toolspanel.h"
 #include "viewctrl.h"
@@ -137,6 +136,7 @@ GLuint DispView::GetNewName(){
 
 int DispView::SelectRst(){
   selectid=-1;
+  return selectid;
 }
 
 int DispView::SelectObj(int x, int y){

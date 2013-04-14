@@ -6,7 +6,7 @@
 //#include "mathlib/mathutl/meshandalg.h"
 //#include "glhelper.h"
 #include "eventhnd.h"
-#include <GL/gl.h>
+#include <Fl/gl.h>
 #include <vector>
 #include <sigc++/sigc++.h>
 #include "ImageTile.h"
