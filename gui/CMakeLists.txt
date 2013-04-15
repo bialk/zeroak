@@ -1,29 +1,31 @@
 
 ENABLE_LANGUAGE( CXX )
 
-IF(UNIX)
+IF(UNIX OR MINGW)
 INCLUDE (FindPkgConfig)
-ENDIF(UNIX)
+ENDIF(UNIX OR MINGW)
+
+##################### general search paths ########################
 
 IF(UNIX OR MINGW)
   set (CMAKE_LIBRARY_PATH $ENV{HOME}/lib )
   set (CMAKE_PROGRAM_PATH $ENV{HOME}/bin )
   set (CMAKE_INCLUDE_PATH $ENV{HOME}/include )
 ELSEIF(WIN32)
-  set (CMAKE_LIBRARY_PATH ${PROJECT_SOURCE_DIR}/..)
+  set (CMAKE_LIBRARY_PATH  ${PROJECT_SOURCE_DIR}/..)
   set ( CMAKE_PROGRAM_PATH ${CMAKE_LIBRARY_PATH} )
   set ( CMAKE_INCLUDE_PATH ${CMAKE_LIBRARY_PATH} )
 ENDIF(UNIX OR MINGW)
 
-# searching for fltk_jpeg and FLU
-IF(MINGW)
-  set(FLTK_DIR $ENV{HOME})
-  FIND_PROGRAM(FLTK_FLUID_EXECUTABLE NAMES fluid fluid.exe ${FLTK_DIR}/bin )
-ENDIF(MINGW)
+###################### fltk & FLU & etc. ############################
 
 IF(UNIX OR MINGW)
-  set(FLTK_DIR $ENV{HOME} )
-  INCLUDE (FindFLTK)
+
+  IF(MINGW)
+    set(FLTK_DIR $ENV{HOME} )
+    FIND_PROGRAM(FLTK_FLUID_EXECUTABLE NAMES fluid fluid.exe ${FLTK_DIR}/bin )
+  ENDIF(MINGW)
+
   FIND_PACKAGE(FLTK REQUIRED)
 
   FIND_LIBRARY(FLTKJPEG_LIB fltk_jpeg)
@@ -47,12 +49,21 @@ ELSEIF(WIN32)
 
   FIND_PATH(FLU_INCLUDE_DIR FLU/flu_export.h PATH_SUFFIXES FLU_2.14)
   set(FLTK_INCLUDE_DIR ${FLTK_INCLUDE_DIR};${FLU_INCLUDE_DIR})
-  FIND_LIBRARY(FLU_LIBRARY flu
+  FIND_LIBRARY(FLU_LIBRARY_DEBUG flu
     HINTS ${FLU_INCLUDE_DIR}/visualc/Debug
   )
-  set(FLTK_LIBRARIES ${FLTK_LIBRARIES};${FLU_LIBRARY})
-
+  FIND_LIBRARY(FLU_LIBRARY_RELEASE flu
+    HINTS ${FLU_INCLUDE_DIR}/visualc/Release
+  )
+  set(FLTK_LIBRARIES
+     debug ${FLTK_LIBRARIES};${FLU_LIBRARY_DEBUG}
+     optimized ${FLTK_LIBRARIES};${FLU_LIBRARY_RELEASE}
+  )
 ENDIF(UNIX OR MINGW)
+INCLUDE_DIRECTORIES( ${FLTK_INCLUDE_DIR} )
+
+
+#################### opengl ####################
 
 INCLUDE(FindOpenGL)
 IF(NOT OPENGL_FOUND)
@@ -79,6 +90,7 @@ ENDIF()
 
 
 ################# FREEIMAGE_LIB #################
+
 IF(UNIX OR MINGW)
   FIND_LIBRARY(FREEIMAGE_LIB NAMES freeimage FreeImage.lib)
   FIND_PATH(FREEIMAGE_INCLUDE_DIR FreeImage.h )
@@ -86,7 +98,9 @@ ELSEIF(WIN32)
   FIND_PATH(FREEIMAGE_INCLUDE_DIR FreeImage.h PATH_SUFFIXES FreeImage/Dist)
   FIND_LIBRARY(FREEIMAGE_LIB FreeImage HINTS ${FREEIMAGE_INCLUDE_DIR} )
 ENDIF(UNIX OR MINGW)
+INCLUDE_DIRECTORIES(FREEIMAGE_INCLUDE_DIR)
 
+####################### spooles ##################
 
 #FIND_LIBRARY(SPOOLES_LIB spooles_I32)
 #FIND_PATH(SPOOLES_INCLUDE_DIR spooles/InpMtx.h)
@@ -131,14 +145,16 @@ ELSEIF(WIN32)
     debug "${sigc_LIBRARIES_DEBUG}"
     optimized "${sigc_LIBRARIES_RELEASE}"
   )
-  set(sigc_INCLUDE_DIRS ${sigc_INCLUDE_DIRS} ${sigc_CONFIG_DIR})
+  set( sigc_INCLUDE_DIRS ${SIGC_INCLUDE_DIR} ${SIGC_CONFIG_DIR})
 ENDIF(MINGW)
+INCLUDE_DIRECTORIES( ${sigc_INCLUDE_DIRS} )
 
 
 ################# pthread #########################
+
 IF(MINGW)
 ELSEIF(WIN32)
-  FILE(GLOB pthread_DIR "${CMAKE_LIBRARY_PATH}/pthreads-w32-*[0-9]-*[0-9]-*[0-9]" )
+  FILE(GLOB pthread_DIR "${CMAKE_LIBRARY_PATH}/pthreads-w32-*[0-9]-*[0-9]-*[0-9]")
 
   FIND_PATH(pthread_INCLUDE_DIR pthread.h 
     HINTS ${pthread_DIR}/Pre-built.2/include  
@@ -150,6 +166,8 @@ ELSEIF(WIN32)
 ENDIF(MINGW)
 
 
+################## source include dir ################
+INCLUDE_DIRECTORIES( ${zeroak_SOURCE_DIR} )
 
 
 ADD_LIBRARY( lapackcpp
@@ -226,18 +244,9 @@ ADD_EXECUTABLE(
   ${zeroak_EXECUTABLE_DIR}/torch.ico
 )
 
-MESSAGE("TEST ${zeroak_EXECUTABLE_DIR}")
-
+#MESSAGE("VAR=${zeroak_EXECUTABLE_DIR}")
 #MESSAGE("VAR=${FLTK_INCLUDE_DIR}")
 #MESSAGE("VAR=${sigc_INCLUDE_DIRS}")
-
-INCLUDE_DIRECTORIES(
-                    ${zeroak_SOURCE_DIR}
-                    ${sigc_INCLUDE_DIRS}
-                    ${FLTK_INCLUDE_DIR}
-                    ${FREEIMAGE_INCLUDE_DIR}
-#                    ${SPOOLES_INCLUDE_DIR}
-)
 
 IF(WIN32)
   set(zeroak_WIN32_OPTIONS "-DNOMINMAX -D_USE_MATH_DEFINES" /MP)
