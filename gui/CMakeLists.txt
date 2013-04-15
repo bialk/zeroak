@@ -98,7 +98,7 @@ ELSEIF(WIN32)
   FIND_PATH(FREEIMAGE_INCLUDE_DIR FreeImage.h PATH_SUFFIXES FreeImage/Dist)
   FIND_LIBRARY(FREEIMAGE_LIB FreeImage HINTS ${FREEIMAGE_INCLUDE_DIR} )
 ENDIF(UNIX OR MINGW)
-INCLUDE_DIRECTORIES(FREEIMAGE_INCLUDE_DIR)
+INCLUDE_DIRECTORIES(${FREEIMAGE_INCLUDE_DIR})
 
 ####################### spooles ##################
 
@@ -118,15 +118,15 @@ ENDIF(UNIX OR MINGW)
 IF(MINGW)
   FIND_LIBRARY(SIGC_LIB sigc-2.0)
   set( sigc_LIBRARIES ${SIGC_LIB} )
-  FIND_PATH(SIGC_INCLUDE_DIR sigc++/sigc++.h PATH_SUFFIXES sigc++-2.0)
-  FIND_PATH(SIGC_CONFIG_DIR sigc++config.h $ENV{HOME}/lib/sigc++-2.0/include)
-  set( sigc_INCLUDE_DIRS ${SIGC_INCLUDE_DIR} ${SIGC_CONFIG_DIR})
+  FIND_PATH(sigc_INCLUDE_DIR sigc++/sigc++.h PATH_SUFFIXES sigc++-2.0)
+  FIND_PATH(sigc_CONFIG_DIR sigc++config.h $ENV{HOME}/lib/sigc++-2.0/include)
+  set( sigc_INCLUDE_DIRS ${sigc_INCLUDE_DIR} ${sigc_CONFIG_DIR})
 ELSEIF(UNIX)
   PKG_SEARCH_MODULE(sigc sigc++-2.0 REQUIRED)
 ELSEIF(WIN32)
   FILE(GLOB sigc_DIR "${CMAKE_LIBRARY_PATH}/libsigc++-2.*[0-9].*[0-9]")
   #MESSAGE("TEST ${sigc_DIR}")
-  FIND_PATH(sigc_INCLUDE_DIRS sigc++/sigc++.h HINTS ${sigc_DIR})
+  FIND_PATH(sigc_INCLUDE_DIR sigc++/sigc++.h HINTS ${sigc_DIR})
 
   IF(MSVC10)
     FIND_PATH(sigc_CONFIG_DIR  sigc++config.h HINTS ${sigc_DIR}/MSVC_Net2010)
@@ -145,7 +145,7 @@ ELSEIF(WIN32)
     debug "${sigc_LIBRARIES_DEBUG}"
     optimized "${sigc_LIBRARIES_RELEASE}"
   )
-  set( sigc_INCLUDE_DIRS ${SIGC_INCLUDE_DIR} ${SIGC_CONFIG_DIR})
+  set( sigc_INCLUDE_DIRS ${sigc_INCLUDE_DIR};${sigc_CONFIG_DIR})
 ENDIF(MINGW)
 INCLUDE_DIRECTORIES( ${sigc_INCLUDE_DIRS} )
 
