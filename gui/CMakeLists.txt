@@ -38,28 +38,97 @@ IF(UNIX OR MINGW)
 
 ELSEIF(WIN32)
 
-  FIND_PATH(FLTK_DIR FL/Fl.H PATH_SUFFIXES fltk-1.1.10-build )
-  FIND_PROGRAM(FLTK_FLUID_EXECUTABLE fluid.exe HINTS ${FLTK_DIR}/bin/${CMAKE_BUILD_TYPE} )
-  FIND_PACKAGE(FLTK REQUIRED)
-  FIND_LIBRARY(FLTK_JPEG_LIB fltk_jpeg HINTS ${FLTK_DIR}/bin/${CMAKE_BUILD_TYPE} )
-  FIND_LIBRARY(FLTK_PNG_LIB fltk_png HINTS ${FLTK_DIR}/bin/${CMAKE_BUILD_TYPE} )
-  FIND_LIBRARY(FLTK_ZLIB_LIB fltk_zlib HINTS ${FLTK_DIR}/bin/${CMAKE_BUILD_TYPE} )
-#  MESSAGE("TEST ${FLTK_LIBRARIES}")
-#  MESSAGE("TEST2 ${FLTK_INCLUDE_DIR}")
+  if(MSVC10)
+    FIND_PATH(FLTK_INCLUDE_DIR_DEBUG FL/Fl.H PATH_SUFFIXES
+      fltk-1.1.10-msvc10-debug
+    )
+    FIND_PATH(FLTK_INCLUDE_DIR_RELEASE FL/Fl.H PATH_SUFFIXES
+      fltk-1.1.10-msvc10-release
+    )
+  elseif(MSVC90)
+    FIND_PATH(FLTK_INCLUDE_DIR_DEBUG FL/Fl.H PATH_SUFFIXES
+      fltk-1.1.10-msvc9-debug
+    )
+    FIND_PATH(FLTK_INCLUDE_DIR_RELEASE FL/Fl.H PATH_SUFFIXES
+      fltk-1.1.10-msvc9-release
+    )
+  endif(MSVC10)
 
+
+  FIND_PROGRAM(FLTK_FLUID_EXECUTABLE fluid.exe
+    HINTS ${FLTK_INCLUDE_DIR_RELEASE}/bin )
+
+  FIND_LIBRARY(FLTK_LIB_DEBUG fltk HINTS ${FLTK_INCLUDE_DIR_DEBUG}/bin)
+  FIND_LIBRARY(FLTK_IMAGES_LIB_DEBUG fltk_images HINTS ${FLTK_INCLUDE_DIR_DEBUG}/bin)
+  FIND_LIBRARY(FLTK_FORMS_LIB_DEBUG fltk_forms HINTS ${FLTK_INCLUDE_DIR_DEBUG}/bin)
+  FIND_LIBRARY(FLTK_GL_LIB_DEBUG fltk_gl HINTS ${FLTK_INCLUDE_DIR_DEBUG}/bin)
+  FIND_LIBRARY(FLTK_JPEG_LIB_DEBUG fltk_jpeg HINTS ${FLTK_INCLUDE_DIR_DEBUG}/bin)
+  FIND_LIBRARY(FLTK_PNG_LIB_DEBUG fltk_png HINTS ${FLTK_INCLUDE_DIR_DEBUG}/bin)
+  FIND_LIBRARY(FLTK_ZLIB_LIB_DEBUG fltk_zlib HINTS ${FLTK_INCLUDE_DIR_DEBUG}/bin)
+
+  FIND_LIBRARY(FLTK_LIB_RELEASE fltk HINTS ${FLTK_INCLUDE_DIR_RELEASE}/bin)
+  FIND_LIBRARY(FLTK_IMAGES_LIB_RELEASE fltk_images HINTS ${FLTK_INCLUDE_DIR_RELEASE}/bin)
+  FIND_LIBRARY(FLTK_FORMS_LIB_RELEASE fltk_forms HINTS ${FLTK_INCLUDE_DIR_RELEASE}/bin)
+  FIND_LIBRARY(FLTK_GL_LIB_RELEASE fltk_gl HINTS ${FLTK_INCLUDE_DIR_RELEASE}/bin)
+  FIND_LIBRARY(FLTK_JPEG_LIB_RELEASE fltk_jpeg HINTS ${FLTK_INCLUDE_DIR_RELEASE}/bin)
+  FIND_LIBRARY(FLTK_PNG_LIB_RELEASE fltk_png HINTS ${FLTK_INCLUDE_DIR_RELEASE}/bin)
+  FIND_LIBRARY(FLTK_ZLIB_LIB_RELEASE fltk_zlib HINTS ${FLTK_INCLUDE_DIR_RELEASE}/bin)
+
+  set(FLTK_LIBRARIES
+    debug "${FLTK_LIB_DEBUG}"
+    debug "${FLTK_IMAGES_LIB_DEBUG}"
+    debug "${FLTK_FORMS_LIB_DEBUG}"
+    debug "${FLTK_GL_LIB_DEBUG}"
+    optimized "${FLTK_LIB_RELEASE}"
+    optimized "${FLTK_IMAGES_LIB_RELEASE}"
+    optimized "${FLTK_FORMS_LIB_RELEASE}"
+    optimized "${FLTK_GL_LIB_RELEASE}"
+  )
+
+  SET(FLTK_JPEG_LIB
+     debug ${FLTK_JPEG_LIB_DEBUG}
+     optimized ${FLTK_JPEG_LIB_RELEASE}
+  )
+  SET(FLTK_PNG_LIB
+     debug ${FLTK_PNG_LIB_DEBUG}
+     optimized ${FLTK_PNG_LIB_RELEASE}
+  )
+  SET(FLTK_ZLIB_LIB
+     debug ${FLTK_ZLIB_LIB_DEBUG}
+     optimized ${FLTK_ZLIB_LIB_RELEASE}
+  )
+  FIND_LIBRARY(FLTK_ws2_32_LIBS ws2_32)
+  FIND_LIBRARY(FLTK_wsock32_LIBS wsock32)
+  FIND_LIBRARY(FLTK_comctl32_LIBS comctl32)
+
+  set(FLTK_LIBRARIES
+     ${FLTK_ws2_32_LIBS} ${FLTK_wsock32_LIBS} ${FLTK_comctl32_LIBS}
+     ${FLTK_LIBRARIES}
+  )
+
+  # looking for FLU library
   FIND_PATH(FLU_INCLUDE_DIR FLU/flu_export.h PATH_SUFFIXES FLU_2.14)
-  set(FLTK_INCLUDE_DIR ${FLTK_INCLUDE_DIR};${FLU_INCLUDE_DIR})
+
+  if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+    set(FLTK_INCLUDE_DIR ${FLTK_INCLUDE_DIR_DEBUG})
+  ELSE(CMAKE_BUILD_TYPE MATCHES DEBUG)
+    set(FLTK_INCLUDE_DIR ${FLTK_INCLUDE_DIR_RELEASE})
+  ENDIF(CMAKE_BUILD_TYPE MATCHES DEBUG)
+
   FIND_LIBRARY(FLU_LIBRARY_DEBUG flu
     HINTS ${FLU_INCLUDE_DIR}/visualc/Debug
   )
   FIND_LIBRARY(FLU_LIBRARY_RELEASE flu
     HINTS ${FLU_INCLUDE_DIR}/visualc/Release
   )
-  set(FLTK_LIBRARIES
-     debug ${FLTK_LIBRARIES};${FLU_LIBRARY_DEBUG}
-     optimized ${FLTK_LIBRARIES};${FLU_LIBRARY_RELEASE}
+
+  set(FLU_LIB
+     debug ${FLU_LIBRARY_DEBUG}
+     optimized ${FLU_LIBRARY_RELEASE}
   )
+
 ENDIF(UNIX OR MINGW)
+INCLUDE_DIRECTORIES( ${FLU_INCLUDE_DIR} )
 INCLUDE_DIRECTORIES( ${FLTK_INCLUDE_DIR} )
 
 
@@ -92,8 +161,8 @@ ENDIF()
 ################# FREEIMAGE_LIB #################
 
 IF(UNIX OR MINGW)
-  FIND_LIBRARY(FREEIMAGE_LIB NAMES freeimage FreeImage.lib)
   FIND_PATH(FREEIMAGE_INCLUDE_DIR FreeImage.h )
+  FIND_LIBRARY(FREEIMAGE_LIB NAMES freeimage FreeImage)
 ELSEIF(WIN32)
   FIND_PATH(FREEIMAGE_INCLUDE_DIR FreeImage.h PATH_SUFFIXES FreeImage/Dist)
   FIND_LIBRARY(FREEIMAGE_LIB FreeImage HINTS ${FREEIMAGE_INCLUDE_DIR} )
@@ -125,7 +194,6 @@ ELSEIF(UNIX)
   PKG_SEARCH_MODULE(sigc sigc++-2.0 REQUIRED)
 ELSEIF(WIN32)
   FILE(GLOB sigc_DIR "${CMAKE_LIBRARY_PATH}/libsigc++-2.*[0-9].*[0-9]")
-  #MESSAGE("TEST ${sigc_DIR}")
   FIND_PATH(sigc_INCLUDE_DIR sigc++/sigc++.h HINTS ${sigc_DIR})
 
   IF(MSVC10)
@@ -169,6 +237,41 @@ ENDIF(MINGW)
 ################## source include dir ################
 INCLUDE_DIRECTORIES( ${zeroak_SOURCE_DIR} )
 
+#ADD_LIBRARY( flu
+#  ../../FLU_2.14/src/FluSimpleString.cpp
+#  ../../FLU_2.14/src/Flu_Button.cpp
+#  ../../FLU_2.14/src/Flu_Chat_Buffer.cpp
+#  ../../FLU_2.14/src/Flu_Choice_Group.cpp
+#  ../../FLU_2.14/src/Flu_Collapsable_Group.cpp
+#  ../../FLU_2.14/src/Flu_Combo_Box.cpp
+#  ../../FLU_2.14/src/Flu_Combo_List.cpp
+#  ../../FLU_2.14/src/Flu_Combo_Tree.cpp
+#  ../../FLU_2.14/src/Flu_DND.cpp
+#  ../../FLU_2.14/src/Flu_Dual_Progress_Meter.cpp
+#  ../../FLU_2.14/src/Flu_Dual_Slider.cpp
+#  ../../FLU_2.14/src/Flu_File_Chooser.cpp
+#  ../../FLU_2.14/src/flu_file_chooser_pixmaps.cpp
+#  ../../FLU_2.14/src/Flu_Float_Input.cpp
+#  ../../FLU_2.14/src/Flu_GL_Canvas.cpp
+#  ../../FLU_2.14/src/Flu_GL_Window.cpp
+#  ../../FLU_2.14/src/Flu_Helpers.cpp
+#  ../../FLU_2.14/src/Flu_Int_Input.cpp
+#  ../../FLU_2.14/src/Flu_Label.cpp
+#  ../../FLU_2.14/src/Flu_Link_Button.cpp
+#  ../../FLU_2.14/src/Flu_Output.cpp
+#  ../../FLU_2.14/src/flu_pixmaps.cpp
+#  ../../FLU_2.14/src/Flu_Progress.cpp
+#  ../../FLU_2.14/src/Flu_Progress_Meter.cpp
+#  ../../FLU_2.14/src/Flu_Return_Button.cpp
+#  ../../FLU_2.14/src/Flu_Separator.cpp
+#  ../../FLU_2.14/src/Flu_Simple_Group.cpp
+#  ../../FLU_2.14/src/Flu_Spinner.cpp
+#  ../../FLU_2.14/src/Flu_Toggle_Group.cpp
+#  ../../FLU_2.14/src/Flu_Tree_Browser.cpp
+#  ../../FLU_2.14/src/Flu_Wrap_Group.cpp
+#)
+
+
 
 ADD_LIBRARY( lapackcpp
     ../mathlib/lapackcpp/eigenval.cpp
@@ -194,23 +297,12 @@ fltk_wrap_ui(
     frmPrjTreeUI.fl
 )
 
-IF(WIN32)
+IF(MSVC_IDE)
   set( zeroak_EXECUTABLE_DIR ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE} )
-else(WIN32)
+else(MSVC_IDE)
   set( zeroak_EXECUTABLE_DIR ${CMAKE_CURRENT_BINARY_DIR} )
-ENDIF(WIN32)
+ENDIF(MSVC_IDE)
 
-add_custom_command (
-  OUTPUT ${zeroak_EXECUTABLE_DIR}/index.html
-  DEPENDS index.html
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/index.html ${zeroak_EXECUTABLE_DIR}/index.html
-  )
-
-add_custom_command (
-  OUTPUT ${zeroak_EXECUTABLE_DIR}/torch.ico
-  DEPENDS torch.ico
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/torch.ico ${zeroak_EXECUTABLE_DIR}/torch.ico
-  )
 
 ADD_EXECUTABLE( 
   zeroak
@@ -240,16 +332,32 @@ ADD_EXECUTABLE(
   frmViewCtrl.cpp frmViewCtrl.h
   
   ${zeroak_FLTK_UI_SRCS}
-  ${zeroak_EXECUTABLE_DIR}/index.html
-  ${zeroak_EXECUTABLE_DIR}/torch.ico
+#  ${zeroak_EXECUTABLE_DIR}/index.html
+#  ${zeroak_EXECUTABLE_DIR}/torch.ico
 )
 
-#MESSAGE("VAR=${zeroak_EXECUTABLE_DIR}")
-#MESSAGE("VAR=${FLTK_INCLUDE_DIR}")
-#MESSAGE("VAR=${sigc_INCLUDE_DIRS}")
+# copy additional resources etc...
+foreach(loop_file_name index.html torch.ico)
+
+  add_custom_command (
+    OUTPUT ${zeroak_EXECUTABLE_DIR}/${loop_file_name}
+    DEPENDS ${loop_file_name}
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${loop_file_name} ${zeroak_EXECUTABLE_DIR}/${loop_file_name}
+  )
+  list(APPEND zeroak_RESOURCES ${zeroak_EXECUTABLE_DIR}/${loop_file_name})
+
+endforeach(loop_file_name)
+
+add_custom_target( zeroak_RESOURCES DEPENDS ${zeroak_RESOURCES})
+add_dependencies( zeroak zeroak_RESOURCES )
+
+#MESSAGE("Compiler flags" ${CMAKE_CXX_FLAGS_DEBUG})
+#string(REGEX REPLACE "/MDd" "/NODEFAULTLIB:LIBCMTD" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+#MESSAGE("Compiler flags changed" ${CMAKE_CXX_FLAGS_DEBUG})
+
 
 IF(WIN32)
-  set(zeroak_WIN32_OPTIONS "-DNOMINMAX -D_USE_MATH_DEFINES" /MP)
+  set(zeroak_WIN32_OPTIONS "-DNOMINMAX -D_USE_MATH_DEFINES")
 ENDIF(WIN32)
 
 ADD_DEFINITIONS(
@@ -264,10 +372,9 @@ TARGET_LINK_LIBRARIES(zeroak
 #  ${SPOOLES_LIB}
   ${FLU_LIB}
   ${FLTK_LIBRARIES}
-  ${FLTK_IMAGES_LIBRARY}
-  ${FLTKZLIB_LIB}
-  ${FLTKJPEG_LIB}
-  ${FLTKPNG_LIB}
+  ${FLTK_ZLIB_LIB}
+  ${FLTK_JPEG_LIB}
+  ${FLTK_PNG_LIB}
   lapackcpp
   ${LAPACK_LIB}
   ${BLAS_LIB}
@@ -275,7 +382,6 @@ TARGET_LINK_LIBRARIES(zeroak
   ${sigc_LIBRARIES}
   ${FREEIMAGE_LIB}
   ${pthread_LIB}
+  ${OPENGL_LIBRARIES}
 )
-
-ADD_DEPENDENCIES(zeroak apputil)
 

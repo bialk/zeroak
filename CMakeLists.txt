@@ -25,6 +25,7 @@ set (zeroak_SHAREDIR ${CMAKE_ROOT}/bialk/zeroak)
 include_directories("${PROJECT_BINARY_DIR}")
 
 #SET ( CMAKE_BUILD_TYPE Release )
-SET ( CMAKE_BUILD_TYPE Debug )
+#SET ( CMAKE_BUILD_TYPE Debug )
 
-ADD_SUBDIRECTORY( gui )
+ADD_SUBDIRECTORY(gui)
+

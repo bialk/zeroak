@@ -24,7 +24,7 @@
 #endif
 #endif
 
-inline long round(float x){	return (x>0)?(x+0.5):(x-0.5);	}
+inline long round(float x){	return (x>0)?long(x+0.5):long(x-0.5);	}
 
 #ifndef INF
 #define INF 1e20
@@ -75,10 +75,10 @@ public:
 		lnkoef = log(koef);
 	}
 	inline double Val(float x){		
-		return x-=a, koef*exp(b*x*x);
+        return x-=float(a),(double)(koef*exp(b*x*x));
 	}
 	inline double ValLn(float x){		
-		return x-=a,lnkoef + b*x*x;
+        return x-=(float)a, (double)((lnkoef + b*x*x));
 	}
 };
 
@@ -114,7 +114,7 @@ inline void vnormal2(float &x, float &y, float &z,
 class NormOfSurf{
 public:
   void Build(int rangex, int rangey){
-    float n[3]; float ix,iy;
+    float n[3]; int ix,iy;
     // generating of normals in the cetral part of surface
     for(ix=1;ix<rangex-1;ix++){
       for(iy=1;iy<rangey-1;iy++){
@@ -220,11 +220,11 @@ class LinItp{
   }
   void test(){
     //test example
-    float ix;
+    int ix;
     init();
     for(ix=-20;ix<=1000;ix+=1){
-      float y=ix*4-12+float(rand())/RAND_MAX-0.5;
-      add(y,ix);
+      float y = float(ix*4-12+float(rand())/RAND_MAX-0.5);
+      add(y,(float)ix);
     }
     solve();
     printf("a=%f, b=%f\n",a,b);
@@ -236,7 +236,7 @@ public:
   double n,x,xx,xxx,xxxx,g,gx,gxx;
   float a,b,x0;
   void reset(){    
-    a=b=x0=n=x=xx=xxx=xxxx=g=gx=gxx=0;
+    n=x=xx=xxx=xxxx=g=gx=gxx=a=b=x0=0.0l;
   }
   void add(float _x,float _g){
     x    += _x;
@@ -253,13 +253,13 @@ public:
     double d=(-x*x*xxxx-xx*xx*xx+2*xx*x*xxx-xxx*xxx*n+xx*n*xxxx);
     if(d==0) return;
     //b = (-x*g*xxxx+xxx*xx*g+x*xx*gxx-gx*xx^2+n*gx*xxxx-n*xxx*gxx)/d;
-    b = (-x*g*xxxx+xxx*xx*g+x*xx*gxx-gx*xx*xx+n*gx*xxxx-n*xxx*gxx)/d;
+    b = float((-x*g*xxxx+xxx*xx*g+x*xx*gxx-gx*xx*xx+n*gx*xxxx-n*xxx*gxx)/d);
     //a = -(xx^2*g+x^2*gxx-xx*x*gx-xxx*x*g-xx*n*gxx+xxx*n*gx)/d;
-    a = -(xx*xx*g+x*x*gxx-xx*x*gx-xxx*x*g-xx*n*gxx+xxx*n*gx)/d;
+    a = float(-(xx*xx*g+x*x*gxx-xx*x*gx-xxx*x*g-xx*n*gxx+xxx*n*gx)/d);
     //c = -(-g*xx*xxxx+g*xxx^2+xx^2*gxx-xx*xxx*gx+x*gx*xxxx-x*xxx*gxx)/d;
     double c = -(-g*xx*xxxx+g*xxx*xxx+xx*xx*gxx-xx*xxx*gx+x*gx*xxxx-x*xxx*gxx)/d;
     if(a==0) return;
-    x0 = -b/(2*a); b = (4*c*a-b*b)/(4*a);
+    x0 = float(-b/(2*a)); b = float((4*c*a-b*b)/(4*a));
   }
   void test(){
     reset();
