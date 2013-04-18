@@ -109,11 +109,11 @@ ELSEIF(WIN32)
   # looking for FLU library
   FIND_PATH(FLU_INCLUDE_DIR FLU/flu_export.h PATH_SUFFIXES FLU_2.14)
 
-  if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+  if(CMAKE_BUILD_TYPE MATCHES Debug)
     set(FLTK_INCLUDE_DIR ${FLTK_INCLUDE_DIR_DEBUG})
-  ELSE(CMAKE_BUILD_TYPE MATCHES DEBUG)
+  ELSE(CMAKE_BUILD_TYPE MATCHES Debug)
     set(FLTK_INCLUDE_DIR ${FLTK_INCLUDE_DIR_RELEASE})
-  ENDIF(CMAKE_BUILD_TYPE MATCHES DEBUG)
+  ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
   FIND_LIBRARY(FLU_LIBRARY_DEBUG flu
     HINTS ${FLU_INCLUDE_DIR}/visualc/Debug
@@ -166,6 +166,8 @@ IF(UNIX OR MINGW)
 ELSEIF(WIN32)
   FIND_PATH(FREEIMAGE_INCLUDE_DIR FreeImage.h PATH_SUFFIXES FreeImage/Dist)
   FIND_LIBRARY(FREEIMAGE_LIB FreeImage HINTS ${FREEIMAGE_INCLUDE_DIR} )
+  FIND_FILE(FREEIMAGE_DLL FreeImage.dll HINTS ${FREEIMAGE_INCLUDE_DIR} )
+  list(APPEND zeroak_DLL ${FREEIMAGE_DLL})
 ENDIF(UNIX OR MINGW)
 INCLUDE_DIRECTORIES(${FREEIMAGE_INCLUDE_DIR})
 
@@ -181,6 +183,9 @@ IF(UNIX OR MINGW)
 ELSEIF(WIN32)
   FIND_LIBRARY(LAPACK_LIB lapack_win32 PATH_SUFFIXES lapack)
   FIND_LIBRARY(BLAS_LIB blas_win32 PATH_SUFFIXES lapack)
+  FIND_FILE(LAPACK_DLL lapack_win32.dll PATH_SUFFIXES lapack)
+  FIND_FILE(BLAS_DLL blas_win32.dll PATH_SUFFIXES lapack)
+  list(APPEND zeroak_DLL ${LAPACK_DLL} ${BLAS_DLL})
 ENDIF(UNIX OR MINGW)
 
 ################# SIGC++ #########################
@@ -203,8 +208,18 @@ ELSEIF(WIN32)
         HINTS ${sigc_DIR}
         PATH_SUFFIXES MSVC_Net2010/Win32/Debug 
     )
+    FIND_FILE(sigc_DLL_DEBUG
+        sigc-vc100-d-2_0.dll
+        HINTS ${sigc_DIR}
+        PATH_SUFFIXES MSVC_Net2010/Win32/Debug
+    )
     FIND_LIBRARY(sigc_LIBRARIES_RELEASE
 	sigc-vc100-2_0 
+        HINTS ${sigc_DIR}
+        PATH_SUFFIXES MSVC_Net2010/Win32/Release
+    )
+    FIND_FILE(sigc_DLL_RELEASE
+        sigc-vc100-2_0.dll
         HINTS ${sigc_DIR}
         PATH_SUFFIXES MSVC_Net2010/Win32/Release
     )
@@ -213,6 +228,13 @@ ELSEIF(WIN32)
     debug "${sigc_LIBRARIES_DEBUG}"
     optimized "${sigc_LIBRARIES_RELEASE}"
   )
+  if(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(sigc_DLL ${sigc_DLL_DEBUG})
+  else(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(sigc_DLL ${sigc_DLL_RELEASE})
+  endif(CMAKE_BUILD_TYPE MATCHES Debug)
+  list(APPEND zeroak_DLL ${sigc_DLL})
+
   set( sigc_INCLUDE_DIRS ${sigc_INCLUDE_DIR};${sigc_CONFIG_DIR})
 ENDIF(MINGW)
 INCLUDE_DIRECTORIES( ${sigc_INCLUDE_DIRS} )
@@ -230,6 +252,11 @@ ELSEIF(WIN32)
   FIND_LIBRARY(pthread_LIB pthreadVSE2
     HINTS ${pthread_DIR}/Pre-built.2/lib/x86
   )
+  FIND_FILE(pthread_DLL pthreadVSE2.dll
+    HINTS ${pthread_DIR}/Pre-built.2/dll/x86
+  )
+  list(APPEND zeroak_DLL ${pthread_DLL})
+
   INCLUDE_DIRECTORIES( ${pthread_INCLUDE_DIR} )  
 ENDIF(MINGW)
 
@@ -347,6 +374,21 @@ foreach(loop_file_name index.html torch.ico)
   list(APPEND zeroak_RESOURCES ${zeroak_EXECUTABLE_DIR}/${loop_file_name})
 
 endforeach(loop_file_name)
+
+# copy nessesary dlls
+foreach(loop_dll_path ${zeroak_DLL})
+
+  get_filename_component(loop_dll_name ${loop_dll_path} NAME)
+  # message("${loop_dll_name}")
+  add_custom_command (
+    OUTPUT ${zeroak_EXECUTABLE_DIR}/${loop_dll_name}
+    DEPENDS ${loop_dll_path}
+    COMMAND ${CMAKE_COMMAND} -E copy ${loop_dll_path} ${zeroak_EXECUTABLE_DIR}/${loop_dll_name}
+  )
+  list(APPEND zeroak_RESOURCES ${zeroak_EXECUTABLE_DIR}/${loop_dll_name})
+
+endforeach(loop_dll_path)
+
 
 add_custom_target( zeroak_RESOURCES DEPENDS ${zeroak_RESOURCES})
 add_dependencies( zeroak zeroak_RESOURCES )
