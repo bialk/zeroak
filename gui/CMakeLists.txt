@@ -167,7 +167,7 @@ ELSEIF(WIN32)
   FIND_PATH(FREEIMAGE_INCLUDE_DIR FreeImage.h PATH_SUFFIXES FreeImage/Dist)
   FIND_LIBRARY(FREEIMAGE_LIB FreeImage HINTS ${FREEIMAGE_INCLUDE_DIR} )
   FIND_FILE(FREEIMAGE_DLL FreeImage.dll HINTS ${FREEIMAGE_INCLUDE_DIR} )
-  list(APPEND zeroak_DLL ${FREEIMAGE_DLL})
+  list(APPEND FOR_COPY_TO_BINARY_DIR ${FREEIMAGE_DLL})
 ENDIF(UNIX OR MINGW)
 INCLUDE_DIRECTORIES(${FREEIMAGE_INCLUDE_DIR})
 
@@ -185,7 +185,7 @@ ELSEIF(WIN32)
   FIND_LIBRARY(BLAS_LIB blas_win32 PATH_SUFFIXES lapack)
   FIND_FILE(LAPACK_DLL lapack_win32.dll PATH_SUFFIXES lapack)
   FIND_FILE(BLAS_DLL blas_win32.dll PATH_SUFFIXES lapack)
-  list(APPEND zeroak_DLL ${LAPACK_DLL} ${BLAS_DLL})
+  list(APPEND FOR_COPY_TO_BINARY_DIR ${LAPACK_DLL} ${BLAS_DLL})
 ENDIF(UNIX OR MINGW)
 
 ################# SIGC++ #########################
@@ -233,7 +233,7 @@ ELSEIF(WIN32)
   else(CMAKE_BUILD_TYPE MATCHES Debug)
     set(sigc_DLL ${sigc_DLL_RELEASE})
   endif(CMAKE_BUILD_TYPE MATCHES Debug)
-  list(APPEND zeroak_DLL ${sigc_DLL})
+  list(APPEND FOR_COPY_TO_BINARY_DIR ${sigc_DLL})
 
   set( sigc_INCLUDE_DIRS ${sigc_INCLUDE_DIR};${sigc_CONFIG_DIR})
 ENDIF(MINGW)
@@ -255,7 +255,7 @@ ELSEIF(WIN32)
   FIND_FILE(pthread_DLL pthreadVSE2.dll
     HINTS ${pthread_DIR}/Pre-built.2/dll/x86
   )
-  list(APPEND zeroak_DLL ${pthread_DLL})
+  list(APPEND FOR_COPY_TO_BINARY_DIR ${pthread_DLL})
 
   INCLUDE_DIRECTORIES( ${pthread_INCLUDE_DIR} )  
 ENDIF(MINGW)
@@ -324,14 +324,7 @@ fltk_wrap_ui(
     frmPrjTreeUI.fl
 )
 
-IF(MSVC_IDE)
-  set( zeroak_EXECUTABLE_DIR ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE} )
-else(MSVC_IDE)
-  set( zeroak_EXECUTABLE_DIR ${CMAKE_CURRENT_BINARY_DIR} )
-ENDIF(MSVC_IDE)
-
-
-ADD_EXECUTABLE( 
+ADD_EXECUTABLE(
   zeroak
   mainini.cpp
   eventlog.cpp eventlog.h
@@ -359,44 +352,35 @@ ADD_EXECUTABLE(
   frmViewCtrl.cpp frmViewCtrl.h
   
   ${zeroak_FLTK_UI_SRCS}
-#  ${zeroak_EXECUTABLE_DIR}/index.html
-#  ${zeroak_EXECUTABLE_DIR}/torch.ico
+)
+list(APPEND FOR_COPY_TO_BINARY_DIR
+  ${CMAKE_CURRENT_SOURCE_DIR}/index.html
+  ${CMAKE_CURRENT_SOURCE_DIR}/torch.ico
 )
 
-# copy additional resources etc...
-foreach(loop_file_name index.html torch.ico)
+######################### copy additional resources ######################
 
-  add_custom_command (
-    OUTPUT ${zeroak_EXECUTABLE_DIR}/${loop_file_name}
-    DEPENDS ${loop_file_name}
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${loop_file_name} ${zeroak_EXECUTABLE_DIR}/${loop_file_name}
-  )
-  list(APPEND zeroak_RESOURCES ${zeroak_EXECUTABLE_DIR}/${loop_file_name})
+IF(MSVC_IDE)
+  set( COPY_PATH_TO_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE} )
+else(MSVC_IDE)
+  set( COPY_PATH_TO_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} )
+ENDIF(MSVC_IDE)
 
-endforeach(loop_file_name)
-
-# copy nessesary dlls
-foreach(loop_dll_path ${zeroak_DLL})
-
+foreach(loop_dll_path ${FOR_COPY_TO_BINARY_DIR})
   get_filename_component(loop_dll_name ${loop_dll_path} NAME)
   # message("${loop_dll_name}")
   add_custom_command (
-    OUTPUT ${zeroak_EXECUTABLE_DIR}/${loop_dll_name}
+    OUTPUT ${COPY_PATH_TO_BINARY_DIR}/${loop_dll_name}
     DEPENDS ${loop_dll_path}
-    COMMAND ${CMAKE_COMMAND} -E copy ${loop_dll_path} ${zeroak_EXECUTABLE_DIR}/${loop_dll_name}
+    COMMAND ${CMAKE_COMMAND} -E copy ${loop_dll_path} ${COPY_PATH_TO_BINARY_DIR}/${loop_dll_name}
   )
-  list(APPEND zeroak_RESOURCES ${zeroak_EXECUTABLE_DIR}/${loop_dll_name})
-
+  list(APPEND zeroak_RESOURCES ${COPY_PATH_TO_BINARY_DIR}/${loop_dll_name})
 endforeach(loop_dll_path)
-
 
 add_custom_target( zeroak_RESOURCES DEPENDS ${zeroak_RESOURCES})
 add_dependencies( zeroak zeroak_RESOURCES )
 
-#MESSAGE("Compiler flags" ${CMAKE_CXX_FLAGS_DEBUG})
-#string(REGEX REPLACE "/MDd" "/NODEFAULTLIB:LIBCMTD" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-#MESSAGE("Compiler flags changed" ${CMAKE_CXX_FLAGS_DEBUG})
-
+########################## compilator settings ############################
 
 IF(WIN32)
   set(zeroak_WIN32_OPTIONS "-DNOMINMAX -D_USE_MATH_DEFINES")
